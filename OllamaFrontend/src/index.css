@@ -1,0 +1,59 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Global animations and transitions */
+@layer base {
+  body {
+    @apply bg-gray-100 text-gray-900;
+  }
+}
+
+@layer components {
+  .chat-container {
+    @apply max-w-4xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden;
+  }
+
+  .chat-header {
+    @apply bg-brand-500 text-white p-4 flex justify-between items-center;
+  }
+
+  .message-base {
+    @apply max-w-[75%] rounded-2xl px-4 py-2 mb-2 
+           text-sm relative animate-fade-in;
+  }
+
+  .user-message {
+    @apply message-base bg-brand-500 text-white self-end 
+           rounded-br-none ml-auto;
+  }
+
+  .ai-message {
+    @apply message-base bg-green-500 text-white self-start 
+           rounded-bl-none mr-auto;
+  }
+
+  .file-upload-btn {
+    @apply flex items-center gap-2 bg-brand-500 text-white 
+           px-4 py-2 rounded-lg hover:bg-brand-600 
+           transition-colors duration-300;
+  }
+}
