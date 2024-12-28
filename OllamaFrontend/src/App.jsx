@@ -11,13 +11,14 @@ const ChatInterface = () => {
   const [error, setError] = useState(null);
   const chatContainerRef = useRef(null);
   const fileInputRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
- 
+
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => {
@@ -31,14 +32,12 @@ const ChatInterface = () => {
     const uploadedFile = event.target.files[0];
     if (!uploadedFile) return;
 
-    // Check file size (max 10MB)
     if (uploadedFile.size > 10 * 1024 * 1024) {
       setError('File size exceeds 10MB limit. Please upload a smaller file.');
       fileInputRef.current.value = '';
       return;
     }
 
-    // Check file type
     if (uploadedFile.type !== 'application/pdf') {
       setError('Please upload only PDF files.');
       fileInputRef.current.value = '';
@@ -54,10 +53,23 @@ const ChatInterface = () => {
     }
   };
 
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsLoading(false);
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage?.type === 'ai' && !lastMessage?.content) {
+          return prev.slice(0, -1);
+        }
+        return prev;
+      });
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!input.trim()) return;
 
-    // Check if file is required but not uploaded
     if (!currentFile) {
       setError('Please upload a PDF file before asking questions.');
       return;
@@ -75,6 +87,8 @@ const ChatInterface = () => {
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
+    abortControllerRef.current = new AbortController();
+
     try {
       const formData = new FormData();
       formData.append('question', input);
@@ -86,6 +100,7 @@ const ChatInterface = () => {
       const response = await fetch('http://localhost:8080/api/chat/ask', {
         method: 'POST',
         body: formData,
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
@@ -98,10 +113,10 @@ const ChatInterface = () => {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let aiMessage = { 
-        type: 'ai', 
-        content: '', 
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+      let aiMessage = {
+        type: 'ai',
+        content: '',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
       setMessages((prev) => [...prev, aiMessage]);
@@ -137,29 +152,12 @@ const ChatInterface = () => {
         }
       }
     } catch (error) {
-      console.error('Error:', error);
-      let errorMessage = 'Something went wrong. Please try again.';
-      
-      // Handle specific error cases
-      if (error.message.includes('Failed to fetch') || !navigator.onLine) {
-        errorMessage = 'Network error. Please check your internet connection.';
-      } else if (error.message.includes('413')) {
-        errorMessage = 'File size too large. Please upload a smaller file.';
-      } else if (error.message.includes('401')) {
-        errorMessage = 'Authentication failed. Please log in again.';
-      } else if (error.message.includes('429')) {
-        errorMessage = 'Too many requests. Please wait a moment and try again.';
+      if (error.name === 'AbortError') {
+        console.log('Fetch aborted');
+      } else {
+        console.error('Error:', error);
+        setError('Something went wrong. Please try again.');
       }
-
-      setError(errorMessage);
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: 'error',
-          content: errorMessage,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
     } finally {
       setIsLoading(false);
       setInput('');
@@ -263,6 +261,14 @@ const ChatInterface = () => {
                 <Loader2 className="typing-icon" />
                 <span>EduMatrix is thinking...</span>
               </div>
+              <button 
+                className="stop-button" 
+                onClick={handleStop}
+                title="Stop generating"
+              >
+                <X size={16} />
+                Stop
+              </button>
             </div>
           )}
         </div>
@@ -293,9 +299,3 @@ const ChatInterface = () => {
 };
 
 export default ChatInterface;
-
-
-
-
-
-

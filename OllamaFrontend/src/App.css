@@ -567,3 +567,49 @@ input:focus-visible {
 .message-input:disabled::placeholder {
   color: #94a3b8;
 }
+
+/* Stop Button Styles */
+.stop-button {
+  margin-left: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: #ef4444;
+  color: white;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.stop-button:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.stop-button:active {
+  transform: translateY(0);
+}
+
+/* Enhanced Typing Indicator Container */
+.typing-indicator {
+  padding: 0.75rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Updated Typing Bubble to accommodate stop button */
+.typing-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+  font-size: 0.875rem;
+}
